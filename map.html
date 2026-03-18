@@ -1,0 +1,99 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; }
+  #map { width: 100%; height: 100%; }
+
+  .marker-pin {
+    width: 28px;
+    height: 28px;
+    border-radius: 50% 50% 50% 0;
+    background: #c0392b;
+    transform: rotate(-45deg);
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  .leaflet-tooltip.exhibit-tooltip {
+    background: white;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    padding: 10px 14px;
+    font-family: sans-serif;
+    max-width: 220px;
+    pointer-events: none;
+  }
+  .leaflet-tooltip.exhibit-tooltip::before { display: none; }
+  .tooltip-venue {
+    font-size: 13px;
+    font-weight: bold;
+    color: #111;
+    margin-bottom: 6px;
+  }
+  .tooltip-exhibit {
+    font-size: 11px;
+    color: #555;
+    line-height: 1.6;
+  }
+  .tooltip-exhibit span {
+    display: block;
+  }
+  .tooltip-address {
+    font-size: 11px;
+    color: #999;
+    margin-top: 6px;
+  }
+</style>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const map = L.map('map', { zoomControl: true }).setView([42.5045, -70.8578], 15);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+  }).addTo(map);
+
+  function makeIcon() {
+    return L.divIcon({
+      className: '',
+      html: '<div class="marker-pin"></div>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 34],
+      tooltipAnchor: [0, -30],
+    });
+  }
+
+  function buildTooltip(loc) {
+    const exhibits = loc.exhibits.split(', ').map(e => `<span>${e}</span>`).join('');
+    return `
+      <div class="tooltip-venue">${loc.venue}</div>
+      <div class="tooltip-exhibit">${exhibits}</div>
+      <div class="tooltip-address">${loc.address}</div>
+    `;
+  }
+
+  function addMarkers(locations) {
+    for (const loc of locations) {
+      L.marker([loc.lat, loc.lng], { icon: makeIcon() })
+        .addTo(map)
+        .bindTooltip(buildTooltip(loc), {
+          className: 'exhibit-tooltip',
+          direction: 'top',
+          offset: [0, -10],
+        });
+    }
+  }
+
+  window.addEventListener('message', e => {
+    if (e.data?.type === 'LOAD_LOCATIONS') {
+      map.invalidateSize();
+      addMarkers(e.data.locations);
+    }
+  });
+
+  window.parent.postMessage({ type: 'IFRAME_READY' }, '*');
+</script>
