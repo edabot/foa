@@ -2,18 +2,21 @@ import { wixEvents } from "wix-events-backend";
 import { Permissions, webMethod } from "wix-web-module";
 
 async function filterEventsByDate(date) {
-  const startOfDay = date ? new Date(date) : new Date();
-  startOfDay.setUTCHours(0, 0, 0, 0);
+  // Events use America/New_York (EDT = UTC-4).
+  // Shift day boundaries by 4 hours so midnight EDT (04:00 UTC) is the cutoff,
+  // preventing late-evening events from spilling into the next UTC day.
+  const EDT_OFFSET_MS = 4 * 60 * 60 * 1000;
 
-  const endOfDay = new Date(startOfDay);
-  endOfDay.setUTCHours(23, 59, 59, 999);
+  const base = new Date(date);
+  base.setUTCHours(0, 0, 0, 0);
+  const startOfDay = new Date(base.getTime() + EDT_OFFSET_MS);
+  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
 
-  const results = await wixEvents.queryEvents().find();
+  const results = await wixEvents.queryEvents().limit(1000).find();
 
   return results.items.filter(event => {
     const start = new Date(event.scheduling.startDate);
-    const end = new Date(event.scheduling.endDate);
-    return start <= endOfDay && end >= startOfDay;
+    return start >= startOfDay && start <= endOfDay;
   });
 }
 

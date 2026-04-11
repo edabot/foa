@@ -1,52 +1,44 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
   html, body { overflow: hidden; width: 100%; }
-  body { padding: 16px; }
+  body { padding: 12px; }
 
   #filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
   .filter-btn {
-    padding: 6px 14px;
+    padding: 4px 8px;
     border-radius: 20px;
     border: 1px solid #2a4189;
     background: white;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
   }
-  .filter-btn.active { background: #2a4189; color: white;     font-weight: 700;
-}
+  .filter-btn.active { background: #2a4189; color: white; font-weight: 700; }
 
-  .day-section { margin-bottom: 32px; }
+  .day-section { margin-bottom: 28px; }
   .day-header {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: bold;
     padding-bottom: 8px;
     border-bottom: 2px solid #333;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
 
   .event-card {
     display: flex;
-    gap: 16px;
-    padding: 16px;
+    flex-direction: column;
     border: 1px solid #ddd;
     border-radius: 8px;
     margin-bottom: 12px;
     cursor: pointer;
-    transition: box-shadow 0.2s;
+    overflow: hidden;
   }
-  .event-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
 
-  .event-image { width: 100px; height: 100px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
-  .event-image-placeholder { width: 100px; height: 100px; background: #f0f0f0; border-radius: 6px; flex-shrink: 0; }
+  .event-image { width: 100%; height: 90px; object-fit: cover; display: block; }
+  .event-image-placeholder { width: 100%; height: 90px; background: #f0f0f0; display: block; }
 
-  .event-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+  .event-info { display: flex; flex-direction: column; gap: 4px; padding: 12px; }
 
-  @media (max-width: 540px) {
-    .event-card { flex-direction: column; }
-    .event-image,
-    .event-image-placeholder { width: 100%; height: 160px; }
-  }
   .event-title { font-size: 16px; font-weight: bold; }
   .event-meta { font-size: 13px; color: #666; }
   .event-description { font-size: 13px; margin-top: 6px; line-height: 1.5; }
@@ -144,7 +136,9 @@
 
     const time = document.createElement('div');
     time.className = 'event-meta';
-    time.textContent = `${event.startTime} – ${event.endTime}`;
+    time.textContent = event.startTime
+      ? `${event.startTime} – ${event.endTime}`
+      : '10 AM';
 
     const location = document.createElement('div');
     location.className = 'event-meta';

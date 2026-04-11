@@ -18,43 +18,54 @@ function wixImageToUrl(wixUrl) {
 
 $w.onReady(async function () {
   let groupedDays = null;
-  let allCategories = null;
+  let cleanCategories = null;
 
   const { window: { width } } = await getBoundingRect();
-  $w('#eventsHtml').width = width;
 
-  function trySend() {
-    if (groupedDays && allCategories) {
-// Deduplicate by name and filter out AUTO/HIDDEN categories
-const cleanCategories = categories
-  .filter(cat => !cat.states?.includes('HIDDEN'))
-  .filter((cat, index, self) =>
-    index === self.findIndex(c => c.name === cat.name)
-  );
+  const components = ['#eventsHtml', '#eventsHtmlMobile'];
 
-$w('#eventsHtml').postMessage({
-  type: 'LOAD_EVENTS',
-  data: { days: groupedDays, categories: cleanCategories }
-});
+  function setupComponent(id) {
+    try {
+      $w(id).width = width;
+      $w(id).onMessage(e => {
+        if (e.data?.type === 'IFRAME_READY') {
+          trySend(id);
+        }
+        if (e.data?.type === 'RESIZE') {
+          $w(id).height = e.data.height + 20;
+        }
+      });
+    } catch (e) {
+      // component not present on this page variant
     }
   }
 
-  // Single onMessage handler for everything
-  $w('#eventsHtml').onMessage(e => {
-    console.log('page received:', e.data?.type);
-    if (e.data?.type === 'IFRAME_READY') {
-      trySend();
+  function trySend(id) {
+    if (!groupedDays || !cleanCategories) return;
+    try {
+      $w(id).postMessage({
+        type: 'LOAD_EVENTS',
+        data: { days: groupedDays, categories: cleanCategories }
+      });
+    } catch (e) {
+      // component not present on this page variant
     }
-  if (e.data?.type === 'RESIZE') {
-    $w('#eventsHtml').height = e.data.height + 20;
   }
-  });
+
+  components.forEach(setupComponent);
 
   const { days, categories } = await getEventsByDaysMethod(DAYS);
 
   groupedDays = days.map(day => ({
     label: day.label,
-    events: day.events.map(event => ({
+    events: [...day.events].sort((a, b) => {
+      const aTime = a.scheduling?.startDate ? new Date(a.scheduling.startDate) : null;
+      const bTime = b.scheduling?.startDate ? new Date(b.scheduling.startDate) : null;
+      if (!aTime && !bTime) return 0;
+      if (!aTime) return 1;
+      if (!bTime) return -1;
+      return aTime - bTime;
+    }).map(event => ({
       _id: event._id,
       title: event.title || 'Untitled',
       description: event.description || '',
@@ -69,7 +80,13 @@ $w('#eventsHtml').postMessage({
     }))
   }));
 
-  allCategories = categories;
 
-  trySend();
+  cleanCategories = categories
+    .filter(cat => !cat.states?.includes('HIDDEN'))
+    .filter(cat => cat.name !== '2026 Festival of Arts')
+    .filter((cat, index, self) =>
+      index === self.findIndex(c => c.name === cat.name)
+    );
+
+  components.forEach(trySend);
 });
