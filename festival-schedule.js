@@ -27,6 +27,7 @@ $w.onReady(async function () {
   function setupComponent(id) {
     try {
       $w(id).width = width;
+      $w(id).height = 200;
       $w(id).onMessage(e => {
         if (e.data?.type === 'IFRAME_READY') {
           trySend(id);

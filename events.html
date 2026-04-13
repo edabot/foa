@@ -60,19 +60,18 @@
     justify-content: center;
     padding: 48px 0;
   }
-  .spinner::after {
-    content: '';
-    width: 32px;
-    height: 32px;
-    border: 3px solid #ddd;
-    border-top-color: #333;
+  .spinner-circle {
+    width: 36px;
+    height: 36px;
+    border: 4px solid #ddd;
+    border-top-color: #2a4189;
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 
-<div id="spinner" class="spinner"></div>
+<div id="spinner" class="spinner"><div class="spinner-circle"></div></div>
 <div id="filters"></div>
 <div id="events"></div>
 
@@ -82,9 +81,7 @@
   let selectedCategories = [];
 
   function reportHeight() {
-    requestAnimationFrame(() => {
-      window.parent.postMessage({ type: 'RESIZE', height: document.body.scrollHeight }, '*');
-    });
+    window.parent.postMessage({ type: 'RESIZE', height: document.body.scrollHeight }, '*');
   }
 
   function render() {
@@ -208,5 +205,6 @@
     }
   });
 
+  window.parent.postMessage({ type: 'RESIZE', height: 200 }, '*');
   window.parent.postMessage({ type: 'IFRAME_READY' }, '*');
 </script>
